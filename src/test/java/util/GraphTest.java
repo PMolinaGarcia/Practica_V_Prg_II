@@ -9,18 +9,29 @@ import org.junit.Test;
 import java.util.List;
 import java.util.ArrayList;
 
-public class GraphTest{
+/**
+ * Clase de prueba unitaria para verificar el funcionamiento del método
+ * {@link Graph#shortestPath(Object, Object)} en la clase {@link Graph}.
+ */
+public class GraphTest {
 
-    /*
-     * This test checks that the method `shortestPath(V v1, V v2)` finds the 
-     * best path between `v1` and `v2` when it exists.
-     *
+    /**
+     * Prueba que el método {@code shortestPath(V v1, V v2)} encuentra el camino
+     * más corto entre dos vértices cuando este existe.
+     * <p>
+     * Se construye un grafo dirigido con múltiples caminos entre los nodos 1 y 4.
+     * El método debe devolver el camino más corto, en este caso:
+     * <pre>
+     *     1 → 5 → 4
+     * </pre>
+     * El camino esperado se compara con el devuelto por {@code shortestPath()}.
      */
     @Test
-    public void shortestPathFindsAPath(){
-        System.out.println("\nTest shortestPathFindsAPath"); 
-        System.out.println("----------------------------"); 
-        // We build the graph
+    public void shortestPathFindsAPath() {
+        System.out.println("\nTest shortestPathFindsAPath");
+        System.out.println("----------------------------");
+
+        // Construcción del grafo
         Graph<Integer> g = new Graph<>();
         g.addEdge(1, 2);
         g.addEdge(1, 5);
@@ -28,12 +39,13 @@ public class GraphTest{
         g.addEdge(3, 4);
         g.addEdge(5, 4);
 
-        // We build the expected path
+        // Camino esperado: 1 → 5 → 4
         List<Integer> expectedPath = new ArrayList<>();
         expectedPath.add(1);
         expectedPath.add(5);
         expectedPath.add(4);
-        //We check if the returned path is equal to the expected one.
+
+        // Verificación de igualdad con el camino obtenido
         assertEquals(expectedPath, g.shortestPath(1, 4));
     }
 }

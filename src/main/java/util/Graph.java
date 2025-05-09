@@ -1,36 +1,30 @@
 package util;
 
 import java.lang.reflect.Array;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.ArrayDeque;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.stream.Collectors;
-import java.util.Queue;
 
+/**
+ * Clase que representa un grafo dirigido utilizando una lista de adyacencia.
+ * Permite añadir vértices, añadir aristas y encontrar el camino más corto entre dos vértices.
+ *
+ * @param <V> el tipo de los vértices del grafo.
+ */
 public class Graph<V> {
 
-    private HashSet<V> set = new HashSet<>();
-
-    //Lista de adyacencia.
+    // Lista de adyacencia.
     private Map<V, Set<V>> adjacencyList = new HashMap<>();
 
-    //Lista del grafo, que contiene vértices y listas de adyacencia
-    private Map<V, Map<V, Set<V>>> grafo = new HashMap<>();
-
     /**
-     * Añade el vértice `v` al grafo.
+     * Añade el vértice {@code v} al grafo.
      *
      * @param v vértice a añadir.
-     * @return `true` si no estaba anteriormente y `false` en caso contrario.
+     * @return {@code true} si el vértice no estaba anteriormente en el grafo, {@code false} en caso contrario.
      */
     public boolean addVertex(V v) {
-        if (grafo.containsKey(v)) {
-            grafo.put(v, adjacencyList);
+        if (!adjacencyList.containsKey(v)) {
+            adjacencyList.put(v, new HashSet<>());
             return true;
         } else {
             return false;
@@ -38,114 +32,92 @@ public class Graph<V> {
     }
 
     /**
-     * Añade un arco entre los vértices `v1` y `v2` al grafo. En caso de
-     * que no exista alguno de los vértices, lo añade también.
+     * Añade un arco dirigido entre los vértices {@code v1} y {@code v2}.
+     * Si alguno de los vértices no existe en el grafo, también se añade.
      *
-     * @param v1 el origen del arco.
-     * @param v2 el destino del arco.
-     * @return `true` si no existía el arco y `false` en caso contrario.
+     * @param v1 el vértice origen del arco.
+     * @param v2 el vértice destino del arco.
+     * @return {@code true} si el arco no existía previamente, {@code false} en caso contrario.
      */
     public boolean addEdge(V v1, V v2) {
-        if (grafo.containsKey(v1) | grafo.containsKey(v2)) {
-            if (!grafo.containsKey(v1)) {
-                addVertex(v1);
-                grafo.get(v2).put(v1, set);
-                return true;
-            } else if (!grafo.containsKey(v2)) {
-                addVertex(v2);
-                grafo.get(v1).put(v2, set);
-                return true;
-            }
-        }
-        if (grafo.containsKey(v1) && grafo.containsKey(v2)) {
-            if (grafo.get(v1).containsKey(v2)) {
-                return false;
-            } else {
-                return true;
-            }
-        } else {
-            addVertex(v1);
-            addVertex(v2);
-            grafo.get(v1).put(v2, set);
-            return true;
-        }
+        addVertex(v1);
+        addVertex(v2);
+        return adjacencyList.get(v1).add(v2);
     }
 
     /**
-     * Obtiene el conjunto de vértices adyacentes a `v`.
+     * Devuelve el conjunto de vértices adyacentes a un vértice dado.
      *
      * @param v vértice del que se obtienen los adyacentes.
-     * @return conjunto de vértices adyacentes.
+     * @return conjunto de vértices adyacentes, o {@code null} si el vértice no existe.
+     * @throws Exception si ocurre un error al acceder a la lista de adyacencia.
      */
-    public Set<V> obtainAdjacents(V v) throws Exception {
-        if (grafo.containsKey(v)) {
-            return grafo.get(v).keySet();
-        } else {
-            return null;
-        }
+    public Set<V> obtainAdjacents(V v) {
+            if (adjacencyList.containsKey(v)) {
+                return adjacencyList.get(v);
+            } else {
+                return null;
+            }
     }
 
     /**
-     * Comprueba si el grafo contiene el vértice dado.
+     * Comprueba si el grafo contiene un vértice dado.
      *
      * @param v vértice para el que se realiza la comprobación.
-     * @return `true` si `v` es un vértice del grafo.
+     * @return {@code true} si el vértice existe en el grafo, {@code false} en caso contrario.
      */
     public boolean containsVertex(V v) {
-        if (grafo.containsKey(v)) {
-            return true;
-        } else {
-            return false;
-        }
+        return adjacencyList.containsKey(v);
     }
 
     /**
-     * Método `toString()` reescrito para la clase `Grafo.java`.
+     * Devuelve una representación en forma de cadena de la lista de adyacencia del grafo.
      *
-     * @return una cadena de caracteres con la lista de adyacencia.
+     * @return una cadena que representa los vértices y sus conexiones.
      */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        Set<V> vertices = grafo.keySet();
+        Set<V> vertices = adjacencyList.keySet();
         for (V v : vertices) {
-            sb.append(grafo.get(v)).append(" -> ").append(grafo.get(v).keySet().toString()).append("\n");
+            sb.append(v).append(" -> ").append(adjacencyList.get(v)).append("\n");
         }
         return sb.toString();
     }
 
     /**
-     * Obtiene, en caso de que exista, el camino más corto entre
-     * `v1` y `v2`. En caso contrario, devuelve `null`.
+     * Obtiene el camino más corto entre los vértices {@code v1} y {@code v2}, si existe.
+     * Utiliza una búsqueda en anchura (BFS) para encontrar el camino.
+     * <p>
+     * - Se utiliza una cola para el orden de visita.<br>
+     * - Se lleva un mapa de predecesores para reconstruir el camino.<br>
+     * - Se usa un conjunto para registrar los vértices visitados.<br>
+     * - Si se alcanza el vértice destino, se reconstruye el camino desde el final hasta el inicio y se invierte.<br>
      *
      * @param v1 el vértice origen.
      * @param v2 el vértice destino.
-     * @return lista con la secuencia de vértices del camino más corto
-     * entre `v1` y `v2`
-     **/
+     * @return una lista con la secuencia de vértices del camino más corto, o {@code null} si no existe dicho camino.
+     */
     public List<V> shortestPath(V v1, V v2) {
-        //Creamos una cola para el orden
-        //Creamos un mapa que relaciones a cada vértice con el anterior
-        //Creamos un conjunto de los vértices visitados
         Queue<V> cola = new ArrayDeque<>();
-        HashMap <V, V> anteriores = new HashMap<>();
-        HashSet <V> visitados = new HashSet<>();
+        HashMap<V, V> anteriores = new HashMap<>();
+        HashSet<V> visitados = new HashSet<>();
 
-        //Añadimos el primer vértice tanto a la cola como a los visitados
+        // Añadimos el primer vértice a la cola y al conjunto de visitados
         cola.add(v1);
         visitados.add(v1);
 
-        //Si la cola no está vacía, pasamos el vértice v1, que está a la cabeza de la cola, como el actual
-        while(!cola.isEmpty()) {
+        // Mientras la cola no esté vacía
+        while (!cola.isEmpty()) {
             V actual = cola.poll();
-            //Si el vértice actual es el que buscamos, se rompe el bucle
+
+            // Si el vértice actual es el destino, terminamos
             if (actual == v2) {
                 break;
-                //En caso de que el vértice no sea el que buscamos, para cada vértice obtenemos su lista de adyacencia. Si entre los vértices visitados no está alguno de los
-                //vértices de la lista de adyacencia, lo añadimos; añadimos también el vértice con el actual a la relación con su anterior. El vértice anterior a vertice es actual. Añadimos
-                //vertice a la cola.
             } else {
-                for (V vertice : grafo.get(actual).keySet()) {
+                // Por cada vértice adyacente al actual
+                for (V vertice : adjacencyList.get(actual)) {
+                    // Si no ha sido visitado, se marca, se enlaza con su anterior y se encola
                     if (!visitados.contains(vertice)) {
                         visitados.add(vertice);
                         anteriores.put(vertice, actual);
@@ -154,24 +126,28 @@ public class Graph<V> {
                 }
             }
         }
-        //Si entre los vertices visitados no está v2 y v2 no es el mismo que v1, retornamos null, porque indica que no hay un camino entre v1 y v2.
-        if (!visitados.contains(v2) && !v1.equals(v2)){
+
+        // Si no se ha alcanzado el destino, retornamos null
+        if (!visitados.contains(v2) && !v1.equals(v2)) {
             return null;
         }
 
-        //Creamos una lista que nos diga el camino que hemos seguido de v1 a v2.
-        List <V> camino = new ArrayList<>();
+        // Reconstrucción del camino desde el destino al origen
+        List<V> camino = new ArrayList<>();
         V vertice = v2;
-        //Mientras que el vertice al que hacemos referencia no sea nulo, lo añadimos al camino y seguimos añadiendo los vértices anteriores, hasta llegar al original, del que no hay anterior.
-        while (vertice != null){
-            camino.add(v2);
-            vertice=anteriores.get(vertice);
+        while (vertice != null) {
+            camino.add(vertice);
+            vertice = anteriores.get(vertice);
         }
-        //Si el camino está vacío, es que no existe, por lo que retornamos null.
-        if (camino.isEmpty()){
+
+        // Si el camino está vacío, retornamos null
+        if (camino.isEmpty()) {
             return null;
         }
-        //Retornamos el camino.
+
+        // Invertimos el camino para que vaya de v1 a v2
+        Collections.reverse(camino);
         return camino;
     }
 }
+
