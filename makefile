@@ -17,3 +17,6 @@ jar: compilar
 javadoc:
 	mkdir -p $(DOC_DIR)
 	javadoc -d $(DOC_DIR) -encoding utf-8 -docencoding utf-8 -charset utf-8 $(shell find ./src/main/java -type f -name "*.java")
+
+ejecutar:
+	java -cp bin pr2.App
