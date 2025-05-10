@@ -5,9 +5,11 @@ limpiar:
 	rm -f *.jar
 	rm -rf bin	
 
-compilar: limpiar
+compilar:
+	rm -f *.jar
+	rm -rf bin
 	mkdir bin
-	find . -name *.java | xargs javac -cp bin -d bin
+	find src/main/java -name "*.java" | xargs javac -cp bin -d bin
 
 jar: compilar
 	jar cvfm $(fichJar) Manifest.txt -C bin . 
